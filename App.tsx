@@ -4,23 +4,34 @@
  */
 
 import React from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { enableScreens } from 'react-native-screens';
+import { colors } from './src/theme/tokens';
 
 enableScreens(true);
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const theme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: colors.background,
+      primary: colors.primary,
+      card: colors.card,
+      text: colors.text,
+      border: colors.border,
+    },
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
+        <StatusBar barStyle="dark-content" />
+        <NavigationContainer theme={theme}>
           <RootNavigator />
         </NavigationContainer>
       </SafeAreaProvider>

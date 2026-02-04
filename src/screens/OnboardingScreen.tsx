@@ -1,23 +1,53 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
-import Animated, { interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { interpolate, interpolateColor, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import storage from '../services/storage';
-import { colors, spacing } from '../theme/tokens';
+import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import OnboardingScene from '../assets/illustrations/OnboardingScene';
+import { decks } from '../data/decks';
+import { updateSettings } from '../services/progress';
 
 const { width, height } = Dimensions.get('window');
 
 const pages = [
-  { title: 'Swipe to Learn', desc: 'Right = I know, Left = I don\'t', bg: '#F0F4FF' },
-  { title: 'Smart Repetition', desc: 'Spaced repetition adapts to you', bg: '#FFF7F0' },
-  { title: 'Works Offline', desc: 'Learn anywhere, anytime', bg: '#F0FFF5' },
-  { title: 'Pick a Language', desc: 'Start your journey now', bg: '#FFF0F3' },
+  { title: 'Swipe to Learn', desc: 'Right = I know it. Left = Still learning.', variant: 'swipe' as const },
+  { title: 'Smart Repetition', desc: 'Spaced repetition locks words in.', variant: 'repeat' as const },
+  { title: 'Works Offline', desc: 'Keep your streak anywhere.', variant: 'offline' as const },
+  { title: 'Pick a Language', desc: 'Choose your first deck and dive in.', variant: 'language' as const },
 ];
+
+// Separate Dot component to use hooks properly at top level
+function Dot({ index, x }: { index: number; x: Animated.SharedValue<number> }) {
+  const style = useAnimatedStyle(() => ({
+    width: interpolate(x.value, [(index - 1) * width, index * width, (index + 1) * width], [8, 26, 8]),
+    backgroundColor: interpolateColor(x.value, [(index - 1) * width, index * width, (index + 1) * width], [colors.border, colors.primary, colors.border]),
+  }));
+
+  return <Animated.View style={[styles.dot, style]} />;
+}
 
 export default function OnboardingScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Onboarding'>) {
   const x = useSharedValue(0);
   const scrollRef = useRef<Animated.ScrollView>(null);
+  const [selected, setSelected] = useState(decks[0].id);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const seen = await storage.getBoolean('onboarding_seen');
+        const hasSettings = !!(await storage.get('settings_v1'));
+        if (seen || hasSettings) {
+          navigation.replace('Main');
+        }
+      } finally {
+        setChecking(false);
+      }
+    })();
+  }, [navigation]);
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
@@ -25,20 +55,35 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
     },
   });
 
-  const dotStyle = (i: number) => useAnimatedStyle(() => ({
-    width: interpolate(x.value, [(i - 1) * width, i * width, (i + 1) * width], [8, 24, 8]),
-    backgroundColor: interpolate(x.value, [(i - 1) * width, i * width, (i + 1) * width], [colors.muted, colors.primary, colors.muted]) as any,
-  }));
-
-  const next = async () => {
-    const idx = Math.round(x.value / width);
-    if (idx >= pages.length - 1) {
-      await storage.setBoolean('onboarding_seen', true);
-      navigation.replace('Home');
-    } else {
-      scrollRef.current?.scrollTo({ x: (idx + 1) * width, animated: true });
+  const finish = async () => {
+    try {
+      await Promise.all([
+        updateSettings({ languageId: selected }),
+        storage.setBoolean('onboarding_seen', true),
+      ]);
+    } catch (error) {
+      console.warn('Onboarding finish error', error);
+    } finally {
+      navigation.replace('Main');
     }
   };
+
+  const next = async () => {
+    if (pageIndex >= pages.length - 1) {
+      await finish();
+    } else {
+      scrollRef.current?.scrollTo({ x: (pageIndex + 1) * width, animated: true });
+    }
+  };
+
+  const skip = async () => {
+    await storage.setBoolean('onboarding_seen', true);
+    navigation.replace('Main');
+  };
+
+  if (checking) {
+    return <View style={styles.container} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -48,23 +93,53 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
+        onMomentumScrollEnd={(event) => {
+          const idx = Math.round(event.nativeEvent.contentOffset.x / width);
+          setPageIndex(idx);
+        }}
         scrollEventThrottle={16}
       >
         {pages.map((p, i) => (
-          <View key={i} style={[styles.page, { backgroundColor: p.bg }]}> 
+          <View key={p.title} style={styles.page}>
+            <View style={styles.hero}>
+              <OnboardingScene variant={p.variant} width={260} height={200} />
+            </View>
             <Text style={styles.title}>{p.title}</Text>
             <Text style={styles.desc}>{p.desc}</Text>
+            {i === pages.length - 1 ? (
+              <View style={styles.languageGrid}>
+                {decks.map((deck) => (
+                  <Pressable
+                    key={deck.id}
+                    onPress={() => setSelected(deck.id)}
+                    style={[
+                      styles.languageCard,
+                      selected === deck.id && styles.languageCardActive,
+                    ]}
+                  >
+                    <Text style={styles.languageEmoji}>{deck.emoji}</Text>
+                    <View>
+                      <Text style={styles.languageName}>{deck.name}</Text>
+                      <Text style={styles.languageMeta}>{deck.level} · {deck.to}</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </View>
         ))}
       </Animated.ScrollView>
       <View style={styles.footer}>
+        <Pressable onPress={skip} style={styles.skipBtn}>
+          <Text style={styles.skipText}>Skip</Text>
+        </Pressable>
         <View style={styles.dots}>
           {pages.map((_, i) => (
-            <Animated.View key={i} style={[styles.dot, dotStyle(i)]} />
+            <Dot key={i} index={i} x={x} />
           ))}
         </View>
         <Pressable onPress={next} style={({ pressed }) => [styles.nextBtn, { opacity: pressed ? 0.8 : 1 }]}>
-          <Text style={styles.nextText}>Next</Text>
+          <Text style={styles.nextText}>{pageIndex === pages.length - 1 ? 'Start' : 'Next'}</Text>
         </Pressable>
       </View>
     </View>
@@ -72,13 +147,43 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  page: { width, height, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: '700', color: colors.text },
-  desc: { marginTop: spacing.md, fontSize: 16, color: colors.muted },
-  footer: { position: 'absolute', bottom: spacing.lg, left: 0, right: 0, alignItems: 'center' },
-  dots: { flexDirection: 'row', gap: 8, marginBottom: spacing.md },
-  dot: { height: 8, borderRadius: 4, width: 8, backgroundColor: colors.muted },
-  nextBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, backgroundColor: colors.primary },
-  nextText: { color: 'white', fontWeight: '600' },
+  container: { flex: 1, backgroundColor: colors.background },
+  page: { width, height, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
+  hero: { marginBottom: spacing.xl },
+  title: { fontSize: 28, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.display, textAlign: 'center' },
+  desc: { marginTop: spacing.md, fontSize: 16, color: colors.muted, textAlign: 'center', fontFamily: fontFamilies.body },
+  languageGrid: { marginTop: spacing.xl, gap: spacing.md, width: '100%' },
+  languageCard: {
+    padding: spacing.lg,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  languageCardActive: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  languageEmoji: { fontSize: 28 },
+  languageName: { fontSize: 16, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.heading },
+  languageMeta: { marginTop: 2, fontSize: 13, color: colors.muted, fontFamily: fontFamilies.body },
+  footer: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    left: spacing.lg,
+    right: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dots: { flexDirection: 'row', gap: 8 },
+  dot: { height: 8, borderRadius: 4, width: 8, backgroundColor: colors.border },
+  nextBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.primary },
+  nextText: { color: 'white', fontWeight: '700', fontFamily: fontFamilies.heading },
+  skipBtn: { paddingHorizontal: 12, paddingVertical: 8 },
+  skipText: { color: colors.muted, fontWeight: '600', fontFamily: fontFamilies.body },
 });

@@ -3,7 +3,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { Extrapolate, interpolate, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { colors } from '../theme/tokens';
+import { colors, fontFamilies } from '../theme/tokens';
+import storage from '../services/storage';
+import BackgroundShapes from '../components/BackgroundShapes';
 
 export default function SplashScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Splash'>) {
   const scale = useSharedValue(0.5);
@@ -14,8 +16,17 @@ export default function SplashScreen({ navigation }: NativeStackScreenProps<Root
     opacity.value = withSequence(withTiming(1, { duration: 400 }), withDelay(800, withTiming(0, { duration: 300 })));
 
     const timeout = setTimeout(() => {
-      navigation.replace('Onboarding');
-    }, 1200);
+      (async () => {
+        try {
+          const seen = await storage.getBoolean('onboarding_seen');
+          const hasSettings = !!(await storage.get('settings_v1'));
+          navigation.replace(seen || hasSettings ? 'Main' : 'Onboarding');
+        } catch (error) {
+          console.warn('Splash storage error', error);
+          navigation.replace('Main');
+        }
+      })();
+    }, 1100);
     return () => clearTimeout(timeout);
   }, [navigation, opacity, scale]);
 
@@ -26,17 +37,20 @@ export default function SplashScreen({ navigation }: NativeStackScreenProps<Root
 
   return (
     <View style={styles.container}>
+      <BackgroundShapes />
       <Animated.View style={[styles.icon, iconStyle]}>
-        <Text style={styles.logoText}>💬</Text>
+        <Text style={styles.logoText}>🗣️</Text>
       </Animated.View>
       <Text style={styles.appName}>LinguaSwipe</Text>
+      <Text style={styles.tagline}>Swipe your way to fluency.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  icon: { width: 96, height: 96, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0F4FF' },
-  logoText: { fontSize: 48 },
-  appName: { marginTop: 16, fontSize: 20, fontWeight: '600', color: colors.text },
+  icon: { width: 96, height: 96, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0F4FF' },
+  logoText: { fontSize: 40 },
+  appName: { marginTop: 16, fontSize: 24, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.heading },
+  tagline: { marginTop: 6, fontSize: 14, color: colors.muted, fontFamily: fontFamilies.body },
 });

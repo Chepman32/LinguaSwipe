@@ -5,9 +5,10 @@ import { View } from 'react-native';
 type Props = { size?: number; stroke?: number; progress: number; color?: string; bg?: string };
 
 export default function ProgressRing({ size = 96, stroke = 8, progress, color = '#007AFF', bg = '#E5E5EA' }: Props) {
+  const clamped = Math.max(0, Math.min(100, progress));
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const offset = c - (progress * c) / 100;
+  const offset = c - (clamped * c) / 100;
   return (
     <View>
       <Svg width={size} height={size}>
