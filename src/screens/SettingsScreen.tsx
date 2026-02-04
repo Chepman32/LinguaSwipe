@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Switch, Pressable, ScrollView, Alert } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import { LanguageIcon, SoundIcon } from '../assets/icons';
+import DeckIcon from '../components/DeckIcon';
 import { decks } from '../data/decks';
 import { getSettings, resetProgress, updateSettings } from '../services/progress';
 
@@ -49,48 +50,48 @@ export default function SettingsScreen() {
         <Text style={styles.title}>Settings</Text>
         <Text style={styles.subtitle}>Customize your learning experience.</Text>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        <View style={styles.settingRow}>
-          <View style={styles.settingLabel}>
-            <SoundIcon color={colors.primary} />
-            <Text style={styles.settingText}>Sounds</Text>
-          </View>
-          <Switch value={sounds} onValueChange={onToggleSound} />
-        </View>
-        <View style={styles.settingRow}>
-          <View style={styles.settingLabel}>
-            <Text style={styles.settingText}>Daily goal</Text>
-          </View>
-          <View style={styles.goalControls}>
-            <Pressable style={styles.goalBtn} onPress={() => onGoalChange(-1)}>
-              <Text style={styles.goalBtnText}>-</Text>
-            </Pressable>
-            <Text style={styles.goalValue}>{dailyGoal}</Text>
-            <Pressable style={styles.goalBtn} onPress={() => onGoalChange(1)}>
-              <Text style={styles.goalBtnText}>+</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Language deck</Text>
-        {decks.map((deck) => (
-          <Pressable key={deck.id} style={[styles.languageCard, languageId === deck.id && styles.languageCardActive]} onPress={() => onLanguageSelect(deck.id)}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
-              <LanguageIcon color={colors.primary} />
-              <View>
-                <Text style={styles.languageTitle}>{deck.emoji} {deck.name}</Text>
-                <Text style={styles.languageMeta}>{deck.level} · {deck.to}</Text>
+              <SoundIcon color={colors.primary} />
+              <Text style={styles.settingText}>Sounds</Text>
+            </View>
+            <Switch value={sounds} onValueChange={onToggleSound} />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingText}>Daily goal</Text>
+            </View>
+            <View style={styles.goalControls}>
+              <Pressable style={styles.goalBtn} onPress={() => onGoalChange(-1)}>
+                <Text style={styles.goalBtnText}>-</Text>
+              </Pressable>
+              <Text style={styles.goalValue}>{dailyGoal}</Text>
+              <Pressable style={styles.goalBtn} onPress={() => onGoalChange(1)}>
+                <Text style={styles.goalBtnText}>+</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Language deck</Text>
+          {decks.map((deck) => (
+            <Pressable key={deck.id} style={[styles.languageCard, languageId === deck.id && styles.languageCardActive]} onPress={() => onLanguageSelect(deck.id)}>
+              <View style={styles.settingLabel}>
+                <DeckIcon icon={deck.icon} size={28} />
+                <View>
+                  <Text style={styles.languageTitle}>{deck.name}</Text>
+                  <Text style={styles.languageMeta}>{deck.level} · {deck.to}</Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.radio}>
-              {languageId === deck.id ? <View style={styles.radioInner} /> : null}
-            </View>
-          </Pressable>
-        ))}
-      </View>
+              <View style={styles.radio}>
+                {languageId === deck.id ? <View style={styles.radioInner} /> : null}
+              </View>
+            </Pressable>
+          ))}
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger zone</Text>

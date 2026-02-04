@@ -8,6 +8,7 @@ import StatTile from '../components/StatTile';
 import HeroScene from '../assets/illustrations/HeroScene';
 import BackgroundShapes from '../components/BackgroundShapes';
 import { BoltIcon, FlameIcon, SettingsIcon } from '../assets/icons';
+import DeckIcon from '../components/DeckIcon';
 import { getSettings, getStats } from '../services/progress';
 import { getDeckById } from '../data/decks';
 
@@ -15,6 +16,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const [stats, setStats] = useState({ reviewedToday: 0, mastered: 0, accuracy: 0, dueCount: 0, totalCards: 0, streakDays: 0 });
   const [languageName, setLanguageName] = useState('');
+  const [languageId, setLanguageId] = useState('');
   const [dailyGoal, setDailyGoal] = useState(12);
 
   const load = useCallback(async () => {
@@ -22,7 +24,8 @@ export default function HomeScreen() {
     const deck = getDeckById(settings.languageId);
     const latest = await getStats(settings.languageId);
     setStats(latest);
-    setLanguageName(`${deck.emoji} ${deck.name}`);
+    setLanguageName(deck.name);
+    setLanguageId(settings.languageId);
     setDailyGoal(settings.dailyGoal);
   }, []);
 
@@ -46,7 +49,10 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.kicker}>Welcome back</Text>
             <Text style={styles.title}>Daily practice</Text>
-            <Text style={styles.subtitle}>{languageName}</Text>
+            <View style={styles.subtitleRow}>
+              <DeckIcon deckId={languageId} size={20} />
+              <Text style={styles.subtitle}>{languageName}</Text>
+            </View>
           </View>
           <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>
             <SettingsIcon color={colors.text} />
@@ -57,7 +63,7 @@ export default function HomeScreen() {
           <HeroScene width={300} height={200} />
           <View style={styles.heroFooter}>
             <View>
-              <Text style={styles.heroTitle}>Today’s goal</Text>
+              <Text style={styles.heroTitle}>Today&apos;s goal</Text>
               <Text style={styles.heroMeta}>{stats.reviewedToday} of {dailyGoal} cards</Text>
             </View>
             <View style={styles.ringWrap}>
@@ -95,7 +101,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   kicker: { fontSize: 13, color: colors.muted, fontFamily: fontFamilies.body },
   title: { fontSize: 28, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.display },
-  subtitle: { marginTop: 4, fontSize: 14, color: colors.textLight, fontFamily: fontFamilies.body },
+  subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 4 },
+  subtitle: { fontSize: 14, color: colors.textLight, fontFamily: fontFamilies.body },
   settingsBtn: {
     width: 44,
     height: 44,

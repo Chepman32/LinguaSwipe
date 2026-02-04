@@ -5,7 +5,7 @@ import { colors, fontFamilies, radii, spacing, shadows } from '../theme/tokens';
 export interface CardProps {
   title: string;
   subtitle?: string;
-  emoji?: string;
+  icon?: React.ReactNode;
   onPress?: () => void;
   variant?: 'default' | 'primary' | 'success' | 'warning';
   style?: ViewStyle;
@@ -17,7 +17,7 @@ export interface CardProps {
 export default function Card({
   title,
   subtitle,
-  emoji,
+  icon,
   onPress,
   variant = 'default',
   style,
@@ -34,7 +34,7 @@ export default function Card({
 
   const content = (
     <View style={[styles.card, variantStyles[variant], style]}>
-      {emoji && <Text style={styles.emoji}>{emoji}</Text>}
+      {icon && <View style={styles.iconWrap}>{icon}</View>}
       <View style={styles.content}>
         <Text style={[styles.title, titleStyle]}>{title}</Text>
         {subtitle && <Text style={[styles.subtitle, subtitleStyle]}>{subtitle}</Text>}
@@ -64,8 +64,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     ...shadows.soft,
   },
-  emoji: {
-    fontSize: 32,
+  iconWrap: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

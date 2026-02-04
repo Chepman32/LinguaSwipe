@@ -6,6 +6,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import storage from '../services/storage';
 import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import OnboardingScene from '../assets/illustrations/OnboardingScene';
+import DeckIcon from '../components/DeckIcon';
 import { decks } from '../data/decks';
 import { updateSettings } from '../services/progress';
 
@@ -117,7 +118,7 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
                       selected === deck.id && styles.languageCardActive,
                     ]}
                   >
-                    <Text style={styles.languageEmoji}>{deck.emoji}</Text>
+                    <DeckIcon icon={deck.icon} size={36} />
                     <View>
                       <Text style={styles.languageName}>{deck.name}</Text>
                       <Text style={styles.languageMeta}>{deck.level} · {deck.to}</Text>
@@ -168,7 +169,6 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     borderWidth: 2,
   },
-  languageEmoji: { fontSize: 28 },
   languageName: { fontSize: 16, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.heading },
   languageMeta: { marginTop: 2, fontSize: 13, color: colors.muted, fontFamily: fontFamilies.body },
   footer: {

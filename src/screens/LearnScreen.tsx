@@ -111,7 +111,7 @@ export default function LearnScreen() {
         </View>
       ) : current ? (
         <>
-          <SwipeCard key={`${sessionKey}-${current.id}`} term={current.term} translation={current.translation} onSwipe={handleSwipe} />
+          <SwipeCard key={`${sessionKey}-${current.id}`} term={current.term} translation={current.translation} imageUrl={current.imageUrl} onSwipe={handleSwipe} />
           <View style={styles.actions}>
             <Pressable style={[styles.actionBtn, styles.againBtn]} onPress={() => handleSwipe('again')}>
               <CloseIcon color={colors.danger} />

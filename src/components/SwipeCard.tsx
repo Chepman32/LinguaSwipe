@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Image } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -9,25 +9,32 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { getImageCandidates } from '../utils/imageSources';
 
 type Props = {
   term: string;
   translation: string;
+  imageUrl: string;
   onSwipe: (direction: 'known' | 'again') => void;
 };
 
 const SWIPE_THRESHOLD = 120;
 
-export default function SwipeCard({ term, translation, onSwipe }: Props) {
+export default function SwipeCard({ term, translation, imageUrl, onSwipe }: Props) {
   const translateX = useSharedValue(0);
   const rotate = useSharedValue(0);
   const [showTranslation, setShowTranslation] = React.useState(false);
+  const imageCandidates = React.useMemo(() => getImageCandidates(imageUrl), [imageUrl]);
+  const [imageIndex, setImageIndex] = React.useState(0);
+
+  const currentImage = imageCandidates[imageIndex] ?? imageUrl;
 
   React.useEffect(() => {
     translateX.value = withSpring(0);
     rotate.value = withSpring(0);
     setShowTranslation(false);
-  }, [term, translation, rotate, translateX]);
+    setImageIndex(0);
+  }, [term, translation, imageUrl, rotate, translateX]);
 
   const gesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -65,9 +72,19 @@ export default function SwipeCard({ term, translation, onSwipe }: Props) {
       </Animated.View>
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.card, cardStyle]}>
-          <Pressable onPress={() => setShowTranslation((prev) => !prev)}>
-            <Text style={styles.word}>{showTranslation ? translation : term}</Text>
-            <Text style={styles.helper}>{showTranslation ? 'Tap to see term' : 'Tap to see translation'}</Text>
+          <Pressable onPress={() => setShowTranslation((prev) => !prev)} style={styles.pressable}>
+            <Image
+              source={{ uri: currentImage }}
+              style={styles.image}
+              resizeMode="cover"
+              onError={() => {
+                setImageIndex((prev) => (prev + 1 < imageCandidates.length ? prev + 1 : prev));
+              }}
+            />
+            <View style={styles.content}>
+              <Text style={styles.word}>{showTranslation ? translation : term}</Text>
+              <Text style={styles.helper}>{showTranslation ? 'Tap to see term' : 'Tap to see translation'}</Text>
+            </View>
           </Pressable>
         </Animated.View>
       </GestureDetector>
@@ -76,20 +93,35 @@ export default function SwipeCard({ term, translation, onSwipe }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { alignItems: 'center', justifyContent: 'center', height: 360 },
+  wrapper: { 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    height: 420,
+  },
   card: {
-    width: '88%',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.xl,
+    width: '92%',
     backgroundColor: colors.card,
     borderRadius: radii.xl,
-    alignItems: 'center',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.medium,
   },
+  pressable: {
+    width: '100%',
+  },
+  image: {
+    width: '100%',
+    height: 200,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    alignItems: 'center',
+  },
   word: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
@@ -110,6 +142,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.9)',
     ...shadows.soft,
+    zIndex: 10,
   },
   hintLeft: { left: 40 },
   hintRight: { right: 40 },

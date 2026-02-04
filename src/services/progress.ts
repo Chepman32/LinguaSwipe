@@ -101,6 +101,7 @@ export type StudyCard = {
   id: string;
   term: string;
   translation: string;
+  imageUrl: string;
   progress: CardProgress | undefined;
   due: boolean;
 };

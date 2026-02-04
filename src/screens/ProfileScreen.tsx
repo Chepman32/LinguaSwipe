@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import { CrownIcon, FlameIcon, SettingsIcon } from '../assets/icons';
+import DeckIcon from '../components/DeckIcon';
 import { IAP } from '../services/iap';
 import { getSettings, getStats } from '../services/progress';
 import { getDeckById } from '../data/decks';
@@ -12,13 +13,15 @@ export default function ProfileScreen() {
   const navigation = useNavigation<any>();
   const [stats, setStats] = useState({ streakDays: 0, mastered: 0, accuracy: 0 });
   const [language, setLanguage] = useState('');
+  const [languageId, setLanguageId] = useState('');
 
   const load = useCallback(async () => {
     const settings = await getSettings();
     const deck = getDeckById(settings.languageId);
     const latest = await getStats(settings.languageId);
     setStats({ streakDays: latest.streakDays, mastered: latest.mastered, accuracy: latest.accuracy });
-    setLanguage(`${deck.emoji} ${deck.name}`);
+    setLanguage(deck.name);
+    setLanguageId(settings.languageId);
   }, []);
 
   useEffect(() => {
@@ -37,7 +40,10 @@ export default function ProfileScreen() {
         <View>
           <Text style={styles.kicker}>Profile</Text>
           <Text style={styles.title}>Nova Learner</Text>
-          <Text style={styles.subtitle}>{language}</Text>
+          <View style={styles.subtitleRow}>
+            <DeckIcon deckId={languageId} size={18} />
+            <Text style={styles.subtitle}>{language}</Text>
+          </View>
         </View>
         <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>
           <SettingsIcon color={colors.text} />
@@ -89,7 +95,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   kicker: { fontSize: 12, color: colors.muted, fontFamily: fontFamilies.body },
   title: { fontSize: 26, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.display },
-  subtitle: { marginTop: 4, fontSize: 14, color: colors.textLight, fontFamily: fontFamilies.body },
+  subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 4 },
+  subtitle: { fontSize: 14, color: colors.textLight, fontFamily: fontFamilies.body },
   settingsBtn: {
     width: 44,
     height: 44,

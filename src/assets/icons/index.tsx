@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import Svg, { Path, Rect, Circle, G, ClipPath, Defs } from 'react-native-svg';
 
 type IconProps = { size?: number; color?: string };
 
@@ -120,6 +120,79 @@ export function CloseIcon({ size = 24, color = '#1F2A44' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// Flag Icons
+export function SpainFlagIcon({ size = 32 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <Rect width="32" height="32" rx="8" fill="#C60A1D" />
+      <Rect y="8" width="32" height="16" fill="#FFC400" />
+      <Rect x="8" y="12" width="4" height="8" rx="1" fill="#C60A1D" />
+      <Circle cx="10" cy="14" r="1.5" fill="#FFC400" />
+      <Path d="M8 20h4v2c0 1-1 2-2 2s-2-1-2-2v-2z" fill="#C60A1D" />
+    </Svg>
+  );
+}
+
+export function FranceFlagIcon({ size = 32 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <Rect width="32" height="32" rx="8" fill="#F0F0F0" />
+      <Rect width="10.67" height="32" rx="2" fill="#002395" />
+      <Rect x="21.33" width="10.67" height="32" rx="2" fill="#ED2939" />
+    </Svg>
+  );
+}
+
+export function GermanyFlagIcon({ size = 32 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <Rect width="32" height="32" rx="8" fill="#000" />
+      <Rect y="10.67" width="32" height="10.67" fill="#DD0000" />
+      <Rect y="21.33" width="32" height="10.67" rx="0 0 8 8" fill="#FFCE00" />
+    </Svg>
+  );
+}
+
+export function ItalyFlagIcon({ size = 32 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <Rect width="32" height="32" rx="8" fill="#F0F0F0" />
+      <Rect width="10.67" height="32" rx="2" fill="#009246" />
+      <Rect x="21.33" width="10.67" height="32" rx="2" fill="#CE2B37" />
+    </Svg>
+  );
+}
+
+export function JapanFlagIcon({ size = 32 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <Rect width="32" height="32" rx="8" fill="#FFF" />
+      <Circle cx="16" cy="16" r="8" fill="#BC002D" />
+    </Svg>
+  );
+}
+
+// Generic Language/Book Icon for language selection
+export function BookIcon({ size = 24, color = '#1F2A44' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// Image/Photo icon for cards with images
+export function ImageIcon({ size = 24, color = '#1F2A44' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={3} y={3} width={18} height={18} rx={2} stroke={color} strokeWidth={2} />
+      <Circle cx="8.5" cy="8.5" r="1.5" fill={color} />
+      <Path d="M21 15l-5-5L5 21" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
