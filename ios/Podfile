@@ -5,6 +5,10 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+# Default in RN 0.81 is New Architecture ON unless explicitly disabled (RCT_NEW_ARCH_ENABLED=0).
+# react-native-fast-image doesn't support Fabric/New Architecture yet, so we keep it disabled.
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 

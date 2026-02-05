@@ -72,10 +72,20 @@ export async function getSettings(): Promise<UserSettings> {
   return stored ?? defaultSettings;
 }
 
+const settingsListeners = new Set<(settings: UserSettings) => void>();
+
+export function subscribeSettings(listener: (settings: UserSettings) => void) {
+  settingsListeners.add(listener);
+  return () => {
+    settingsListeners.delete(listener);
+  };
+}
+
 export async function updateSettings(next: Partial<UserSettings>): Promise<UserSettings> {
   const current = await getSettings();
   const merged = { ...current, ...next };
   await storage.set(KEYS.settings, merged);
+  settingsListeners.forEach((listener) => listener(merged));
   return merged;
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, Image } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -73,10 +74,14 @@ export default function SwipeCard({ term, translation, imageUrl, onSwipe }: Prop
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.card, cardStyle]}>
           <Pressable onPress={() => setShowTranslation((prev) => !prev)} style={styles.pressable}>
-            <Image
-              source={{ uri: currentImage }}
+            <FastImage
+              source={{
+                uri: currentImage,
+                priority: FastImage.priority.normal,
+                cache: FastImage.cacheControl.immutable,
+              }}
               style={styles.image}
-              resizeMode="cover"
+              resizeMode={FastImage.resizeMode.cover}
               onError={() => {
                 setImageIndex((prev) => (prev + 1 < imageCandidates.length ? prev + 1 : prev));
               }}

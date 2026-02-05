@@ -20,6 +20,12 @@ function normalizeTags(keywords: string) {
     .filter(Boolean);
 }
 
+export function getImageTags(imageUrl: string) {
+  const keywords = extractKeywords(imageUrl);
+  if (!keywords) return [];
+  return normalizeTags(keywords);
+}
+
 export function getImageCandidates(imageUrl: string, size: ImageSize = DEFAULT_SIZE) {
   const candidates = [imageUrl];
   const keywords = extractKeywords(imageUrl);
@@ -30,11 +36,9 @@ export function getImageCandidates(imageUrl: string, size: ImageSize = DEFAULT_S
 
   const tagSlug = encodeURIComponent(tags.slice(0, 4).join(','));
   const seed = encodeURIComponent(tags.join('-'));
-  const label = encodeURIComponent(tags[0]);
 
   candidates.push(`https://loremflickr.com/${size.width}/${size.height}/${tagSlug}`);
   candidates.push(`https://picsum.photos/seed/${seed}/${size.width}/${size.height}`);
-  candidates.push(`https://placehold.co/${size.width}x${size.height}?text=${label}`);
 
   return candidates;
 }

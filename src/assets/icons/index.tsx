@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Rect, Circle, G, ClipPath, Defs } from 'react-native-svg';
+import Svg, { Path, Rect, Circle } from 'react-native-svg';
 
 type IconProps = { size?: number; color?: string };
 
@@ -120,6 +120,57 @@ export function CloseIcon({ size = 24, color = '#1F2A44' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function RewindIcon({ size = 24, color = '#1F2A44' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M9 10H4V5" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M4 10a8 8 0 1 1 2.3 5.7"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function StarIcon({ size = 24, color = '#1F2A44' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 2.5l2.9 6.1 6.7.9-4.9 4.7 1.2 6.6L12 17.6 6.1 20.8l1.2-6.6-4.9-4.7 6.7-.9L12 2.5z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function HeartIcon({ size = 24, color = '#1F2A44' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21s-7-4.4-9.2-8.6C1.4 9 3.3 5.7 6.7 5.1c2-.4 3.8.6 5.3 2.2 1.5-1.6 3.4-2.6 5.3-2.2 3.4.6 5.3 3.9 3.9 7.3C19 16.6 12 21 12 21z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function InfoIcon({ size = 24, color = '#1F2A44' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={10} stroke={color} strokeWidth={2} />
+      <Path d="M12 10.5v6" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      <Circle cx={12} cy={7.5} r={1} fill={color} />
     </Svg>
   );
 }
