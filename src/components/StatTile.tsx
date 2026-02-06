@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 type Props = {
   label: string;
@@ -9,11 +10,14 @@ type Props = {
   icon?: React.ReactNode;
 };
 
-export default function StatTile({ label, value, accent = colors.primary, icon }: Props) {
+export default function StatTile({ label, value, accent, icon }: Props) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
+  const resolvedAccent = accent ?? colors.primary;
   return (
     <View style={styles.card}>
       <View style={styles.row}>
-        {icon ? <View style={[styles.iconWrap, { backgroundColor: `${accent}1A` }]}>{icon}</View> : null}
+        {icon ? <View style={[styles.iconWrap, { backgroundColor: `${resolvedAccent}1A` }]}>{icon}</View> : null}
         <Text style={styles.value}>{value}</Text>
       </View>
       <Text style={styles.label}>{label}</Text>
@@ -21,7 +25,8 @@ export default function StatTile({ label, value, accent = colors.primary, icon }
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: { card: string; text: string; muted: string }) =>
+  StyleSheet.create({
   card: {
     flex: 1,
     padding: spacing.lg,

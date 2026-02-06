@@ -4,11 +4,12 @@ import Animated, { interpolate, interpolateColor, useAnimatedScrollHandler, useA
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import storage from '../services/storage';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import OnboardingScene from '../assets/illustrations/OnboardingScene';
 import DeckIcon from '../components/DeckIcon';
 import { decks } from '../data/decks';
 import { updateSettings } from '../services/progress';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,16 +21,26 @@ const pages = [
 ];
 
 // Separate Dot component to use hooks properly at top level
-function Dot({ index, x }: { index: number; x: Animated.SharedValue<number> }) {
+function Dot({
+  index,
+  x,
+  colors,
+}: {
+  index: number;
+  x: Animated.SharedValue<number>;
+  colors: { border: string; primary: string };
+}) {
   const style = useAnimatedStyle(() => ({
     width: interpolate(x.value, [(index - 1) * width, index * width, (index + 1) * width], [8, 26, 8]),
     backgroundColor: interpolateColor(x.value, [(index - 1) * width, index * width, (index + 1) * width], [colors.border, colors.primary, colors.border]),
   }));
 
-  return <Animated.View style={[styles.dot, style]} />;
+  return <Animated.View style={[dotStyles.dot, style]} />;
 }
 
 export default function OnboardingScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Onboarding'>) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const x = useSharedValue(0);
   const scrollRef = useRef<Animated.ScrollView>(null);
   const [selected, setSelected] = useState(decks[0].id);
@@ -78,8 +89,13 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
   };
 
   const skip = async () => {
-    await storage.setBoolean('onboarding_seen', true);
-    navigation.replace('Main');
+    try {
+      await storage.setBoolean('onboarding_seen', true);
+    } catch (error) {
+      console.warn('Onboarding skip error', error);
+    } finally {
+      navigation.replace('Main');
+    }
   };
 
   if (checking) {
@@ -131,12 +147,12 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
         ))}
       </Animated.ScrollView>
       <View style={styles.footer}>
-        <Pressable onPress={skip} style={styles.skipBtn}>
+        <Pressable onPress={skip} hitSlop={12} style={styles.skipBtn}>
           <Text style={styles.skipText}>Skip</Text>
         </Pressable>
         <View style={styles.dots}>
           {pages.map((_, i) => (
-            <Dot key={i} index={i} x={x} />
+            <Dot key={i} index={i} x={x} colors={colors} />
           ))}
         </View>
         <Pressable onPress={next} style={({ pressed }) => [styles.nextBtn, { opacity: pressed ? 0.8 : 1 }]}>
@@ -147,7 +163,19 @@ export default function OnboardingScreen({ navigation }: NativeStackScreenProps<
   );
 }
 
-const styles = StyleSheet.create({
+const dotStyles = StyleSheet.create({
+  dot: { height: 8, borderRadius: 4, width: 8 },
+});
+
+const makeStyles = (colors: {
+  background: string;
+  card: string;
+  border: string;
+  primary: string;
+  text: string;
+  muted: string;
+}) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   page: { width, height, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
   hero: { marginBottom: spacing.xl },
@@ -179,9 +207,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    zIndex: 10,
+    elevation: 10,
   },
   dots: { flexDirection: 'row', gap: 8 },
-  dot: { height: 8, borderRadius: 4, width: 8, backgroundColor: colors.border },
   nextBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.primary },
   nextText: { color: 'white', fontWeight: '700', fontFamily: fontFamilies.heading },
   skipBtn: { paddingHorizontal: 12, paddingVertical: 8 },

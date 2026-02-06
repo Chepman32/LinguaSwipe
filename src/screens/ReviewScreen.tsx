@@ -11,9 +11,12 @@ import ProgressRing from '../components/ProgressRing';
 import StatTile from '../components/StatTile';
 import { getDeckById } from '../data/decks';
 import { getSettings, getStats, getWeeklyReviewCounts } from '../services/progress';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function ReviewScreen() {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const [stats, setStats] = useState({ reviewedToday: 0, mastered: 0, accuracy: 0, dueCount: 0, totalCards: 0, streakDays: 0 });
   const [weekly, setWeekly] = useState<{ date: string; count: number }[]>([]);
@@ -81,15 +84,6 @@ export default function ReviewScreen() {
           </View>
         </View>
 
-        <View style={styles.actions}>
-          <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.primaryText}>Start session</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate('Settings')}>
-            <Text style={styles.secondaryText}>Change deck</Text>
-          </Pressable>
-        </View>
-
         <View style={styles.statsRow}>
           <StatTile
             label="Streak"
@@ -132,7 +126,15 @@ export default function ReviewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: {
+  background: string;
+  muted: string;
+  text: string;
+  textLight: string;
+  card: string;
+  primary: string;
+}) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: spacing.xl, paddingBottom: spacing.xxxl },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -162,11 +164,6 @@ const styles = StyleSheet.create({
   heroHint: { marginTop: 6, fontSize: 12, color: colors.muted, fontFamily: fontFamilies.body },
   ringWrap: { alignItems: 'center', justifyContent: 'center' },
   ringText: { position: 'absolute', fontSize: 13, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.heading },
-  actions: { marginTop: spacing.lg, gap: spacing.sm },
-  primaryBtn: { backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
-  primaryText: { color: 'white', fontSize: 16, fontWeight: '700', fontFamily: fontFamilies.heading },
-  secondaryBtn: { backgroundColor: '#E9EDFB', paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
-  secondaryText: { color: colors.primaryDark, fontSize: 15, fontWeight: '700', fontFamily: fontFamilies.heading },
   statsRow: { marginTop: spacing.md, flexDirection: 'row', gap: spacing.md },
 
   section: { marginTop: spacing.xl },
@@ -187,4 +184,3 @@ const styles = StyleSheet.create({
   },
   barLabel: { marginTop: 6, fontSize: 11, color: colors.muted, fontFamily: fontFamilies.body },
 });
-

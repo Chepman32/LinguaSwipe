@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { colors } from '../theme/tokens';
 
 type Props = { variant?: 'cool' | 'warm' };
 
@@ -22,5 +21,5 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   top: { top: -60, right: -80 },
-  bottom: { bottom: -80, left: -60, backgroundColor: colors.background },
+  bottom: { bottom: -80, left: -60 },
 });

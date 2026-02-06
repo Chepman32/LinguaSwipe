@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { useAppTheme } from '../theme/ThemeProvider';
 import { CrownIcon, FlameIcon, SettingsIcon } from '../assets/icons';
 import DeckIcon from '../components/DeckIcon';
 import { IAP } from '../services/iap';
@@ -10,6 +11,8 @@ import { getSettings, getStats } from '../services/progress';
 import { getDeckById } from '../data/decks';
 
 export default function ProfileScreen() {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const [stats, setStats] = useState({ streakDays: 0, mastered: 0, accuracy: 0 });
   const [language, setLanguage] = useState('');
@@ -90,7 +93,16 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: {
+  background: string;
+  card: string;
+  text: string;
+  muted: string;
+  textLight: string;
+  primaryDark: string;
+  accentDark: string;
+}) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, padding: spacing.xl },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   kicker: { fontSize: 12, color: colors.muted, fontFamily: fontFamilies.body },

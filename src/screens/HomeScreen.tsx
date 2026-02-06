@@ -5,9 +5,18 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { BoltIcon, CloseIcon, HeartIcon, RewindIcon, StarIcon } from '../assets/icons';
 import TinderStudyCard, { type TinderStudyCardHandle } from '../components/TinderStudyCard';
+import TranslationQuizModal from '../components/TranslationQuizModal';
 import type { StudyCard } from '../services/progress';
-import { getSettings, getStudyQueue, recordReview } from '../services/progress';
-import { colors, fontFamilies, shadows, spacing } from '../theme/tokens';
+import { getDeckById } from '../data/decks';
+import {
+  getSettings,
+  getStudyQueue,
+  isManuallyInRepeatList,
+  recordReview,
+  toggleManualRepeat,
+} from '../services/progress';
+import { fontFamilies, shadows, spacing } from '../theme/tokens';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 type HistoryEntry = {
   indexBefore: number;
@@ -20,18 +29,30 @@ type ActionButtonProps = {
   borderColor: string;
   size?: number;
   onPress: () => void;
+  backgroundColor?: string;
   children: React.ReactNode;
 };
 
-function ActionButton({ label, color, borderColor, size = 62, onPress, children }: ActionButtonProps) {
+const DEFAULT_ACTION_BG = 'rgba(255,255,255,0.03)';
+
+function ActionButton({
+  label,
+  color,
+  borderColor,
+  size = 62,
+  onPress,
+  backgroundColor,
+  children,
+}: ActionButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.actionBtn,
+        staticStyles.actionBtn,
         {
+          backgroundColor: backgroundColor ?? DEFAULT_ACTION_BG,
           width: size,
           height: size,
           borderRadius: size / 2,
@@ -45,7 +66,18 @@ function ActionButton({ label, color, borderColor, size = 62, onPress, children 
   );
 }
 
+function shuffle<T>(items: T[]) {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default function HomeScreen() {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [queue, setQueue] = useState<StudyCard[]>([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -53,6 +85,13 @@ export default function HomeScreen() {
   const [completed, setCompleted] = useState(false);
   const [empty, setEmpty] = useState(false);
   const [sessionKey, setSessionKey] = useState(0);
+  const [pinned, setPinned] = useState(false);
+  const [pinBusy, setPinBusy] = useState(false);
+
+  const [quizVisible, setQuizVisible] = useState(false);
+  const [quizOptions, setQuizOptions] = useState<string[]>([]);
+  const [quizCorrectIndex, setQuizCorrectIndex] = useState(0);
+  const [quizForCardId, setQuizForCardId] = useState('');
 
   const startRef = useRef<number>(Date.now());
   const historyRef = useRef<HistoryEntry[]>([]);
@@ -133,6 +172,66 @@ export default function HomeScreen() {
 
   const current = queue[index];
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!languageId || !current?.id) {
+      setPinned(false);
+      return;
+    }
+
+    isManuallyInRepeatList(languageId, current.id)
+      .then((value) => {
+        if (!cancelled) setPinned(value);
+      })
+      .catch((error) => console.warn('isManuallyInRepeatList failed', error));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id, languageId]);
+
+  const togglePin = async () => {
+    if (!languageId || !current || pinBusy) return;
+    setPinBusy(true);
+    try {
+      const next = await toggleManualRepeat(languageId, current.id);
+      setPinned(next);
+    } catch (error) {
+      console.warn('toggleManualRepeat failed', error);
+    } finally {
+      setPinBusy(false);
+    }
+  };
+
+  const openQuiz = () => {
+    if (!languageId || !current) return;
+    const deck = getDeckById(languageId);
+    const correctTranslation = current.translation;
+    const pool = deck.cards.map((c) => c.translation).filter((t) => t !== correctTranslation);
+
+    const distractors = new Set<string>();
+    const shuffledPool = shuffle(pool);
+    for (const t of shuffledPool) {
+      distractors.add(t);
+      if (distractors.size >= 3) break;
+    }
+
+    const distractorList = Array.from(distractors);
+    // Ensure we always show 4 options, even if the deck has duplicates.
+    for (const t of shuffledPool) {
+      if (distractorList.length >= 3) break;
+      distractorList.push(t);
+    }
+
+    const options = shuffle([...distractorList.slice(0, 3), correctTranslation]).slice(0, 4);
+    const correctIndex = Math.max(0, options.indexOf(correctTranslation));
+
+    setQuizForCardId(current.id);
+    setQuizOptions(options);
+    setQuizCorrectIndex(correctIndex);
+    setQuizVisible(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -163,6 +262,7 @@ export default function HomeScreen() {
             <TinderStudyCard
               ref={cardRef}
               key={`${sessionKey}-${current.id}`}
+              id={current.id}
               term={current.term}
               translation={current.translation}
               imageUrl={current.imageUrl}
@@ -174,10 +274,10 @@ export default function HomeScreen() {
         {!loading && !empty && !completed && current ? (
           <View style={styles.actionsRow}>
             <ActionButton
-              label="Rewind"
+              label="Quiz"
               color="#FFB547"
               borderColor="rgba(255,181,71,0.5)"
-              onPress={undo}
+              onPress={openQuiz}
               size={60}
             >
               <RewindIcon size={26} color="#FFB547" />
@@ -192,10 +292,11 @@ export default function HomeScreen() {
               <CloseIcon size={26} color="#E5484D" />
             </ActionButton>
             <ActionButton
-              label="Star"
+              label={pinned ? 'Remove from repeat list' : 'Add to repeat list'}
               color="#2B6EF6"
-              borderColor="rgba(43,110,246,0.55)"
-              onPress={() => swipe('known')}
+              borderColor={pinned ? 'rgba(43,110,246,0.9)' : 'rgba(43,110,246,0.55)'}
+              backgroundColor={pinned ? 'rgba(43,110,246,0.18)' : undefined}
+              onPress={togglePin}
               size={60}
             >
               <StarIcon size={26} color="#2B6EF6" />
@@ -221,11 +322,37 @@ export default function HomeScreen() {
           </View>
         ) : null}
       </View>
+
+      <TranslationQuizModal
+        visible={quizVisible}
+        term={current?.term ?? ''}
+        options={quizOptions}
+        correctIndex={quizCorrectIndex}
+        onRequestClose={() => setQuizVisible(false)}
+        onResolved={(correct) => {
+          setQuizVisible(false);
+          setTimeout(() => {
+            if (!current || current.id !== quizForCardId) return;
+            swipe(correct ? 'known' : 'again');
+          }, 220);
+        }}
+      />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
+  actionBtn: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.soft,
+  },
+});
+
+const makeStyles = (colors: { ink: string }) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.ink },
   content: {
     flex: 1,
@@ -284,12 +411,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing.lg,
-  },
-  actionBtn: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.soft,
   },
 });

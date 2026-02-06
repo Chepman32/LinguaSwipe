@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle, TextStyle } from 'react-native';
-import { colors, fontFamilies, radii, spacing, shadows } from '../theme/tokens';
+import { fontFamilies, radii, spacing, shadows } from '../theme/tokens';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export interface CardProps {
   title: string;
@@ -25,12 +26,16 @@ export default function Card({
   subtitleStyle,
   children,
 }: CardProps) {
+  const { colors } = useAppTheme();
+
   const variantStyles = {
     default: { borderColor: colors.border, backgroundColor: colors.card },
     primary: { borderColor: colors.primary, backgroundColor: '#F0F4FF' },
     success: { borderColor: colors.success, backgroundColor: '#E6F7F0' },
     warning: { borderColor: colors.accent, backgroundColor: '#FFF4E3' },
   };
+
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
 
   const content = (
     <View style={[styles.card, variantStyles[variant], style]}>
@@ -54,7 +59,8 @@ export default function Card({
   return content;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: { border: string; text: string; muted: string }) =>
+  StyleSheet.create({
   card: {
     padding: spacing.lg,
     borderRadius: radii.lg,

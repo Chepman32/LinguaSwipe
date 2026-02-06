@@ -16,8 +16,15 @@ export type LanguageDeck = {
 };
 
 // Helper to generate Unsplash URLs with relevant search terms
-const unsplash = (keywords: string, width = 400, height = 300) => {
-  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keywords)}`;
+// Use higher-res images for crisp cards + offline caching.
+const unsplash = (keywords: string, width = 800, height = 600) => {
+  // Unsplash Source is random per request; add a deterministic `sig` so the URL is stable (cache-friendly).
+  let hash = 5381;
+  for (let i = 0; i < keywords.length; i += 1) {
+    hash = (hash * 33) ^ keywords.charCodeAt(i);
+  }
+  const sig = Math.abs(hash) % 1000;
+  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keywords)}&sig=${sig}`;
 };
 
 export const decks: LanguageDeck[] = [

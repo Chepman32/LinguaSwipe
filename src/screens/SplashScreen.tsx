@@ -3,11 +3,14 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { Extrapolate, interpolate, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { colors, fontFamilies } from '../theme/tokens';
+import { fontFamilies } from '../theme/tokens';
 import storage from '../services/storage';
 import BackgroundShapes from '../components/BackgroundShapes';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function SplashScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Splash'>) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(0);
 
@@ -47,9 +50,10 @@ export default function SplashScreen({ navigation }: NativeStackScreenProps<Root
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: { background: string; text: string; muted: string; card: string }) =>
+  StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  icon: { width: 96, height: 96, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0F4FF' },
+  icon: { width: 96, height: 96, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card },
   logoText: { fontSize: 40 },
   appName: { marginTop: 16, fontSize: 24, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.heading },
   tagline: { marginTop: 6, fontSize: 14, color: colors.muted, fontFamily: fontFamilies.body },

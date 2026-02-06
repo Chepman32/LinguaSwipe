@@ -1,14 +1,17 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import { getDeckById } from '../data/decks';
 import { areLanguageImagesCached, setLanguageImagesCached } from '../services/imageCache';
 import { getSettings, subscribeSettings } from '../services/progress';
 import LanguageImageDownloader from './LanguageImageDownloader';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function OfflineLanguagePackDownloader() {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [languageId, setLanguageId] = React.useState('');
   const [languageName, setLanguageName] = React.useState('');
 
@@ -106,6 +109,12 @@ export default function OfflineLanguagePackDownloader() {
             </Text>
           </View>
 
+          {!downloadDone ? (
+            <View style={styles.spinnerWrap}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : null}
+
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${downloadPercent}%` }]} />
           </View>
@@ -139,7 +148,17 @@ export default function OfflineLanguagePackDownloader() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: {
+  primary: string;
+  text: string;
+  muted: string;
+  border: string;
+  background: string;
+  surface: string;
+  card: string;
+  primaryDark: string;
+}) =>
+  StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(11,16,33,0.35)',
@@ -166,6 +185,7 @@ const styles = StyleSheet.create({
   downloadHeader: { alignItems: 'center' },
   downloadTitle: { fontSize: 26, fontWeight: '800', color: colors.text, fontFamily: fontFamilies.display, textAlign: 'center' },
   downloadSubtitle: { marginTop: spacing.sm, fontSize: 14, color: colors.muted, fontFamily: fontFamilies.body, textAlign: 'center' },
+  spinnerWrap: { marginTop: spacing.lg, alignItems: 'center', justifyContent: 'center' },
   progressTrack: {
     marginTop: spacing.xl,
     height: 14,
@@ -191,4 +211,3 @@ const styles = StyleSheet.create({
   },
   downloadBtnText: { color: colors.text, fontWeight: '800', fontFamily: fontFamilies.heading, textAlign: 'center' },
 });
-

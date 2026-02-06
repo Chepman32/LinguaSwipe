@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Switch, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
-import { LanguageIcon, SoundIcon } from '../assets/icons';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { SoundIcon } from '../assets/icons';
 import DeckIcon from '../components/DeckIcon';
 import { decks } from '../data/decks';
+import { clearImageCache } from '../services/imageCache';
 import { getSettings, resetProgress, updateSettings } from '../services/progress';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { themes, type ThemeName } from '../theme/themes';
 
 export default function SettingsScreen() {
+  const { colors, setTheme, themeName } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [sounds, setSounds] = useState(true);
   const [dailyGoal, setDailyGoal] = useState(12);
   const [languageId, setLanguageId] = useState(decks[0].id);
+  const [haptics, setHaptics] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -18,6 +24,7 @@ export default function SettingsScreen() {
       setSounds(settings.sounds);
       setDailyGoal(settings.dailyGoal);
       setLanguageId(settings.languageId);
+      setHaptics(settings.haptics);
     })();
   }, []);
 
@@ -37,6 +44,24 @@ export default function SettingsScreen() {
     await updateSettings({ languageId: id });
   };
 
+  const onToggleHaptics = async (value: boolean) => {
+    setHaptics(value);
+    await updateSettings({ haptics: value });
+  };
+
+  const onClearCache = () => {
+    Alert.alert('Clear cache?', 'This will remove downloaded images. The app will re-download them when needed.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => {
+          clearImageCache().catch((error) => console.warn('clearImageCache failed', error));
+        },
+      },
+    ]);
+  };
+
   const onReset = () => {
     Alert.alert('Reset progress?', 'This will clear your progress for the current deck.', [
       { text: 'Cancel', style: 'cancel' },
@@ -51,13 +76,43 @@ export default function SettingsScreen() {
         <Text style={styles.subtitle}>Customize your learning experience.</Text>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <View style={styles.themeGrid}>
+            {(Object.keys(themes) as ThemeName[]).map((id) => {
+              const t = themes[id];
+              const selected = themeName === id;
+              return (
+                <Pressable
+                  key={id}
+                  style={[styles.themeCard, selected && styles.themeCardActive]}
+                  onPress={() => setTheme(id)}
+                >
+                  <View style={styles.themeSwatchRow}>
+                    <View style={[styles.themeSwatch, { backgroundColor: t.colors.background }]} />
+                    <View style={[styles.themeSwatch, { backgroundColor: t.colors.card }]} />
+                    <View style={[styles.themeSwatch, { backgroundColor: t.colors.primary }]} />
+                  </View>
+                  <Text style={styles.themeName}>{id[0].toUpperCase() + id.slice(1)}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
               <SoundIcon color={colors.primary} />
-              <Text style={styles.settingText}>Sounds</Text>
+              <Text style={styles.settingText}>Sound</Text>
             </View>
             <Switch value={sounds} onValueChange={onToggleSound} />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingText}>Haptics</Text>
+            </View>
+            <Switch value={haptics} onValueChange={onToggleHaptics} />
           </View>
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
@@ -95,6 +150,9 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger zone</Text>
+          <Pressable style={styles.cacheBtn} onPress={onClearCache}>
+            <Text style={styles.cacheText}>Clear cache</Text>
+          </Pressable>
           <Pressable style={styles.resetBtn} onPress={onReset}>
             <Text style={styles.resetText}>Reset progress</Text>
           </Pressable>
@@ -104,7 +162,17 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: {
+  background: string;
+  text: string;
+  muted: string;
+  card: string;
+  border: string;
+  primary: string;
+  primaryDark: string;
+  danger: string;
+}) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: spacing.xl, paddingBottom: spacing.xxxl },
   title: { fontSize: 28, fontWeight: '700', color: colors.text, fontFamily: fontFamilies.display },
@@ -134,6 +202,20 @@ const styles = StyleSheet.create({
   },
   goalBtnText: { fontSize: 18, fontWeight: '700', color: colors.primaryDark },
   goalValue: { fontSize: 16, fontWeight: '700', color: colors.text, width: 32, textAlign: 'center' },
+  themeGrid: { marginTop: spacing.md, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  themeCard: {
+    width: '48%',
+    padding: spacing.lg,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  themeCardActive: { borderColor: colors.primary, borderWidth: 2 },
+  themeSwatchRow: { flexDirection: 'row', gap: 8 },
+  themeSwatch: { width: 18, height: 18, borderRadius: 6, borderWidth: 1, borderColor: colors.border },
+  themeName: { marginTop: spacing.sm, fontSize: 14, fontWeight: '800', color: colors.text, fontFamily: fontFamilies.heading },
   languageCard: {
     marginTop: spacing.md,
     backgroundColor: colors.card,
@@ -158,6 +240,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  cacheBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.card,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  cacheText: { fontWeight: '800', color: colors.text, fontFamily: fontFamilies.heading },
   resetBtn: {
     marginTop: spacing.md,
     backgroundColor: '#FFE9EA',

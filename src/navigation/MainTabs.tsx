@@ -1,14 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
+import WordsScreen from '../screens/WordsScreen';
 import ReviewScreen from '../screens/ReviewScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import { colors } from '../theme/tokens';
-import { HomeIcon, ChartIcon, ProfileIcon } from '../assets/icons';
+import { BookIcon, ChartIcon, HomeIcon, ProfileIcon } from '../assets/icons';
 import OfflineLanguagePackDownloader from '../components/OfflineLanguagePackDownloader';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export type MainTabParamList = {
   Home: undefined;
+  Words: undefined;
   Review: undefined;
   Profile: undefined;
 };
@@ -16,6 +18,7 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabs() {
+  const { colors } = useAppTheme();
   return (
     <>
       <Tab.Navigator
@@ -35,6 +38,8 @@ export default function MainTabs() {
             switch (route.name) {
               case 'Home':
                 return <HomeIcon size={size} color={color} />;
+              case 'Words':
+                return <BookIcon size={size} color={color} />;
               case 'Review':
                 return <ChartIcon size={size} color={color} />;
               case 'Profile':
@@ -46,6 +51,7 @@ export default function MainTabs() {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Words" component={WordsScreen} />
         <Tab.Screen name="Review" component={ReviewScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>

@@ -9,8 +9,9 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import { getImageCandidates } from '../utils/imageSources';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 type Props = {
   term: string;
@@ -22,6 +23,8 @@ type Props = {
 const SWIPE_THRESHOLD = 120;
 
 export default function SwipeCard({ term, translation, imageUrl, onSwipe }: Props) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const translateX = useSharedValue(0);
   const rotate = useSharedValue(0);
   const [showTranslation, setShowTranslation] = React.useState(false);
@@ -97,7 +100,14 @@ export default function SwipeCard({ term, translation, imageUrl, onSwipe }: Prop
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: {
+  card: string;
+  border: string;
+  background: string;
+  text: string;
+  muted: string;
+}) =>
+  StyleSheet.create({
   wrapper: { 
     alignItems: 'center', 
     justifyContent: 'center', 

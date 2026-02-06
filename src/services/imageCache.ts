@@ -1,6 +1,8 @@
 import storage from './storage';
+import FastImage from 'react-native-fast-image';
 
-const KEY = 'image_cache_v1';
+// Bump when image URL/resolution logic changes so existing installs re-download the new assets.
+const KEY = 'image_cache_v3';
 
 type ImageCacheState = {
   cachedByLanguage: Record<string, boolean>;
@@ -17,4 +19,20 @@ export async function setLanguageImagesCached(languageId: string, cached: boolea
   prev.cachedByLanguage[languageId] = cached;
   prev.updatedAt = Date.now();
   await storage.set(KEY, prev);
+}
+
+export async function clearImageCache() {
+  try {
+    FastImage.clearMemoryCache();
+  } catch {
+    // ignore
+  }
+
+  try {
+    await FastImage.clearDiskCache();
+  } catch {
+    // ignore
+  }
+
+  await storage.remove(KEY);
 }

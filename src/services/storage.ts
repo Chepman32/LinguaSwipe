@@ -15,6 +15,9 @@ const storage = {
   async set<T = unknown>(key: string, value: T): Promise<void> {
     await AsyncStorage.setItem(key, JSON.stringify(value));
   },
+  async remove(key: string): Promise<void> {
+    await AsyncStorage.removeItem(key);
+  },
 };
 
 export default storage;

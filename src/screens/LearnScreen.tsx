@@ -2,13 +2,16 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { colors, fontFamilies, radii, shadows, spacing } from '../theme/tokens';
+import { fontFamilies, radii, shadows, spacing } from '../theme/tokens';
 import SwipeCard from '../components/SwipeCard';
 import { CheckIcon, CloseIcon } from '../assets/icons';
 import { getSettings, getStudyQueue, recordReview } from '../services/progress';
 import type { StudyCard } from '../services/progress';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function LearnScreen() {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const [queue, setQueue] = useState<StudyCard[]>([]);
   const [index, setIndex] = useState(0);
@@ -133,7 +136,17 @@ export default function LearnScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: {
+  background: string;
+  card: string;
+  muted: string;
+  text: string;
+  primaryDark: string;
+  primary: string;
+  danger: string;
+  success: string;
+}) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, padding: spacing.xl },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   closeBtn: {
